@@ -26,7 +26,7 @@ class DoneTask(StatesGroup):
 
 @dp.message_handler(commands=['start'])
 async def start_with_rep_bot(message: types.Message):
-    await message.answer('Привет! Чтобы начать введи команду /get и я выдам тебе случайное задание!')
+    await message.answer('Привет!\nЧтобы начать введи команду /get и я выдам тебе случайное задание!')
 
 
 @dp.message_handler(commands=['help'])
