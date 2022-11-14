@@ -31,9 +31,10 @@ async def start_with_rep_bot(message: types.Message):
 
 @dp.message_handler(commands=['help'])
 async def help_for_rep_bot(message: types.Message):
-    await message.answer(md.text('Привет, чтобы начать, выбери одну из команд:\n'
-                         + md.bold('/get') + md.text(' - получение случайного задания')),
-                         ParseMode=ParseMode.MARKDOWN)
+    await bot.send_message(message.chat.id,
+                           md.text('Привет, чтобы начать, выбери одну из команд:\n'
+                           + md.bold('/get') + md.text(' - получение случайного задания')),
+                           parse_mode=ParseMode.MARKDOWN)
 
 
 @dp.message_handler(commands=['get'])
