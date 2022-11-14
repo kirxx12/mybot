@@ -9,6 +9,7 @@ from aiogram import executor
 from random import randint
 from create_db_for_rep import IntWithDb
 from config import TOKEN
+# from settingsForUpdates import SETTING
 
 
 
@@ -26,6 +27,13 @@ class DoneTask(StatesGroup):
 @dp.message_handler(commands=['start'])
 async def start_with_rep_bot(message: types.Message):
     await message.answer('Привет! Чтобы начать введи команду /get и я выдам тебе случайное задание!')
+
+
+@dp.message_handler(commands=['help'])
+async def help_for_rep_bot(message: types.Message):
+    await message.answer(md.text('Привет, чтобы начать, выбери одну из команд:\n'
+                         + md.bold('/get') + md.text(' - получение случайного задания')),
+                         ParseMode=ParseMode.MARKDOWN)
 
 
 @dp.message_handler(commands=['get'])
