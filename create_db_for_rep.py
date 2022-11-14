@@ -61,7 +61,7 @@ class IntWithDb():
         return task
 
 
-    def check_answer(self, id: int, answer: str) -> bool:
+    def check_answer(self, id: int, answer: str, chat_id: str) -> bool:
         db = sl.connect('tg-rep.db')
         cur = db.cursor()
         cur.execute(f"""
@@ -71,24 +71,83 @@ class IntWithDb():
         answer = answer.strip()
         right_answer = str(cur.fetchone()[0]).strip()
         if answer == right_answer:
+            cur.execute(f"""
+                UPDATE {chat_id}
+                SET done = 1
+                WHERE task_id = {id}
+            """)
+            db.commit()
             return True
         return False
 
 
-    def get_random_not_done_task(self):
+    def get_random_not_done_task(self, chat_id):
         db = sl.connect('tg-rep.db')
         cur = db.cursor()
-        cur.execute("""
-            SELECT * FROM quests
+        cur.execute(f"""
+            SELECT * FROM {chat_id}
             WHERE done = 0
         """)
         tasks = cur.fetchall()
+        print(tasks)
+        if len(tasks) < 2:
+            return ('0', 'Задания кончились')
         shuffle(tasks)
-        random_task = tasks[0]
+        random_task_id = tasks[0][0]
+        cur.execute(f"""
+            SELECT * FROM quests
+            WHERE task_id = {random_task_id}
+        """)
+        random_task = cur.fetchone()
         return random_task
 
+
+    def create_db_for_user(self, chat_id: str) -> None:
+        """Создает БД для пользователя с отметками о выполненных заданиях"""
+        db = sl.connect('tg-rep.db')
+        cur = db.cursor()
+        chat_id = str(chat_id)
+        cur.execute(f"""
+            CREATE TABLE IF NOT EXISTS {chat_id}(
+                task_id INT,
+                done INT DEFAULT(0),
+                FOREIGN KEY (task_id) REFERENCES quests(task_id)
+            );
+        """)
+        db.commit()
+        cur.execute(f"""
+            SELECT count(*) FROM {chat_id}
+        """)
+        count = cur.fetchone()[0]
+        if int(count) == 0:
+            cur.execute("""
+                SELECT task_id FROM quests
+            """)
+            tasks_id = cur.fetchall()
+            for task_id in tasks_id:
+                val = (task_id[0], 0)
+                cur.execute(f"""
+                    INSERT INTO {chat_id} VALUES(?, ?);
+                """, val)
+                db.commit()
+
+
+    def check_db(self, name: str) -> set:
+        db = sl.connect('tg-rep.db')
+        cur = db.cursor()
+        cur.execute(f"""
+            SELECT * FROM {name}
+        """)
+        data = cur.fetchall()
+        return data
 
 
 # db = IntWithDb()
 # db.add_task(db.create_dict_for_add('tasks\demo_tasks.txt'))
-# print(db.get_random_not_done_task())
+# print(db.create_db_for_user('m1'))
+# task = db.get_random_not_done_task('m1')
+# print(task[1])
+# if db.check_answer(task[0], input(), 'm1'):
+#     print('Отлично')
+# else:
+#     print('Не очень(')

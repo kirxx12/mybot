@@ -26,6 +26,7 @@ class DoneTask(StatesGroup):
 
 @dp.message_handler(commands=['start'])
 async def start_with_rep_bot(message: types.Message):
+    data.create_db_for_user('m' + str(message.chat.id))
     await message.answer('Привет!\nЧтобы начать введи команду /get и я выдам тебе случайное задание!')
 
 
@@ -41,23 +42,27 @@ async def help_for_rep_bot(message: types.Message):
 async def start_with_rep_bot(message: types.Message,
                              state: FSMContext):
     await DoneTask.GET_TASK.set()
-    random_task = data.get_random_not_done_task()
-    task = f'Номер задания: {random_task[0]}\nУсловие:\n{random_task[1]}'
-    async with state.proxy() as dt:
-        dt['id_task'] = random_task[0]
+    random_task = data.get_random_not_done_task('m' + str(message.chat.id))
+    if random_task[0] == '0':
+        task = 'Задания кончились, можно ложиться спать!'
+        await state.finish()
+    else:
+        task = f'Номер задания: {random_task[0]}\nУсловие:\n{random_task[1]}'
+        async with state.proxy() as dt:
+            dt['id_task'] = random_task[0]
+        await DoneTask.next()
     await message.answer(task)
-    await DoneTask.next()
 
 
 @dp.message_handler(state=DoneTask.CHECK_ANSWER)
 async def check_answer_random_task(message: types.Message,
                                    state: FSMContext):
     async with state.proxy() as dt:
-        if data.check_answer(dt['id_task'], message.text):
+        if data.check_answer(dt['id_task'], message.text, 'm' + str(message.chat.id)):
             await message.answer('Все верно!:) Молодчинка')
             await state.finish()
         else:
-            await message.answer('Неверно:(\n')
+            await message.answer('Неверно!\nПопробуй ещё раз')
 
 
 while __name__ == '__main__':
