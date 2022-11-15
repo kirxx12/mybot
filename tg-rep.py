@@ -70,5 +70,13 @@ async def check_answer_random_task(message: types.Message,
             await message.answer('Неверно!\nПопробуй ещё раз')
 
 
+dp.message_handler(commands=['stop'], state=DoneTask.CHECK_ANSWER)
+async def check_answer_random_task(message: types.Message,
+                                   state: FSMContext):
+    await message.answer('Надеюсь, что когда эта задача попадется тебе снова, '
+                         + 'ты решишь ее')
+    await state.finish()
+
+
 while __name__ == '__main__':
     executor.start_polling(dp)
