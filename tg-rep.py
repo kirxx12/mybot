@@ -9,11 +9,10 @@ from aiogram import executor
 from random import randint
 from create_db_for_rep import IntWithDb
 from config import TOKEN
-# from settingsForUpdates import SETTING
+from settingsForUpdates import SETTING
 
 
-
-bot = Bot(TOKEN)
+bot = Bot(SETTING['TOKEN'])
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 data = IntWithDb()
@@ -26,7 +25,7 @@ class DoneTask(StatesGroup):
 
 @dp.message_handler(commands=['start'])
 async def start_with_rep_bot(message: types.Message):
-    data.create_db_for_user('m' + str(message.chat.id))
+    data.create_db_for_user('m' + message.get_args())
     await message.answer('Привет!\nЧтобы начать введи команду /get и я выдам тебе случайное задание!')
 
 
@@ -42,23 +41,29 @@ async def help_for_rep_bot(message: types.Message):
 async def start_with_rep_bot(message: types.Message,
                              state: FSMContext):
     await DoneTask.GET_TASK.set()
-    random_task = data.get_random_not_done_task('m' + str(message.chat.id))
+    random_task = data.get_random_not_done_task('m' + message.get_args())
     if random_task[0] == '0':
         task = 'Задания кончились, можно ложиться спать!'
+        await message.answer(task)
         await state.finish()
     else:
-        task = f'Номер задания: {random_task[0]}\nУсловие:\n{random_task[1]}'
+        photo = open(str(random_task[3]), 'rb')
         async with state.proxy() as dt:
             dt['id_task'] = random_task[0]
+            dt['name_for_db'] = message.get_args()
         await DoneTask.next()
-    await message.answer(task)
+        await bot.send_message(message.chat.id,
+                               f'{random_task[1]}')
+        await bot.send_photo(message.chat.id,
+                             photo)
+    
 
 
 @dp.message_handler(state=DoneTask.CHECK_ANSWER)
 async def check_answer_random_task(message: types.Message,
                                    state: FSMContext):
     async with state.proxy() as dt:
-        if data.check_answer(dt['id_task'], message.text, 'm' + str(message.chat.id)):
+        if data.check_answer(dt['id_task'], message.text, 'm' + dt['name_for_db']):
             await message.answer('Все верно!:) Молодчинка')
             await state.finish()
         else:

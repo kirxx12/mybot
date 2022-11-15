@@ -1,30 +1,32 @@
 import sqlite3 as sl
 from random import shuffle
 import os
+import re
 
 class IntWithDb():
     def __init__(self) -> None:
-        if not os.path.isfile('tg-rep.db'):
+        if not os.path.isfile('db/tg-rep.db'):
             self.create_db()
+            self.add_task(self.create_dict_for_add('tasks\demo_tasks.txt'))
 
 
     def create_db(self) -> None:
         """Создание базы данных"""
-        db = sl.connect("tg-rep.db")
+        db = sl.connect("db/tg-rep.db")
         cur = db.cursor()
         cur.execute("""
             CREATE TABLE IF NOT EXISTS quests(
                 task_id INT PRIMARY KEY,
                 task_desc TEXT,
                 task_answer TEXT,
-                done INT
+                path_to_image INT
             );
         """)
         db.commit()
 
 
     def add_task(self, tasks: dict) -> None:
-        db = sl.connect("tg-rep.db")
+        db = sl.connect("db/tg-rep.db")
         cur = db.cursor()
         for task in tasks:
             cur.execute('''
@@ -34,7 +36,7 @@ class IntWithDb():
 
     
     def get_task_id(self, id: int) -> str:
-        db = sl.connect("tg-rep.db")
+        db = sl.connect("db/tg-rep.db")
         cur = db.cursor()
         cur.execute(f"""
             SELECT task_desc FROM quests
@@ -45,7 +47,7 @@ class IntWithDb():
 
 
     def get_count_availaible_tasks(self) -> int:
-        db = sl.connect('tg-rep.db')
+        db = sl.connect('db/tg-rep.db')
         cur = db.cursor()
         cur.execute("""
             SELECT count(*) FROM quests
@@ -57,12 +59,13 @@ class IntWithDb():
     def create_dict_for_add(self, path: str) -> list:
         file = open(path)
         s = file.readlines()
-        task = [tuple([str(s[j]) for j in range(i * 4, i * 4 + 4)]) for i in range(len(s) // 4)]
+        reg = re.compile('\n')
+        task = [tuple([reg.sub('', s[j]) for j in range(i * 4, i * 4 + 4)]) for i in range(len(s) // 4)]
         return task
 
 
     def check_answer(self, id: int, answer: str, chat_id: str) -> bool:
-        db = sl.connect('tg-rep.db')
+        db = sl.connect('db/tg-rep.db')
         cur = db.cursor()
         cur.execute(f"""
             SELECT task_answer FROM quests
@@ -82,14 +85,13 @@ class IntWithDb():
 
 
     def get_random_not_done_task(self, chat_id):
-        db = sl.connect('tg-rep.db')
+        db = sl.connect('db/tg-rep.db')
         cur = db.cursor()
         cur.execute(f"""
             SELECT * FROM {chat_id}
             WHERE done = 0
         """)
         tasks = cur.fetchall()
-        print(tasks)
         if len(tasks) < 2:
             return ('0', 'Задания кончились')
         shuffle(tasks)
@@ -104,13 +106,14 @@ class IntWithDb():
 
     def create_db_for_user(self, chat_id: str) -> None:
         """Создает БД для пользователя с отметками о выполненных заданиях"""
-        db = sl.connect('tg-rep.db')
+        db = sl.connect('db/tg-rep.db')
         cur = db.cursor()
         chat_id = str(chat_id)
+        print(chat_id)
         cur.execute(f"""
             CREATE TABLE IF NOT EXISTS {chat_id}(
                 task_id INT,
-                done INT DEFAULT(0),
+                done INT,
                 FOREIGN KEY (task_id) REFERENCES quests(task_id)
             );
         """)
@@ -119,11 +122,13 @@ class IntWithDb():
             SELECT count(*) FROM {chat_id}
         """)
         count = cur.fetchone()[0]
-        if int(count) == 0:
+        print(count)
+        if count == 0:
             cur.execute("""
-                SELECT task_id FROM quests
+                SELECT * FROM quests
             """)
             tasks_id = cur.fetchall()
+            print(tasks_id)
             for task_id in tasks_id:
                 val = (task_id[0], 0)
                 cur.execute(f"""
