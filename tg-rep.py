@@ -9,7 +9,7 @@ from aiogram import executor
 from random import randint
 from create_db_for_rep import IntWithDb
 from config import TOKEN
-from settingsForUpdates import SETTING
+# from settingsForUpdates import SETTING
 
 
 bot = Bot(TOKEN)
