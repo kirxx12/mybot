@@ -56,7 +56,14 @@ async def start_with_rep_bot(message: types.Message,
                                f'{random_task[1]}')
         await bot.send_photo(message.chat.id,
                              photo)
-    
+
+
+dp.message_handler(commands=['stop'], state=DoneTask.CHECK_ANSWER)
+async def check_answer_random_task(message: types.Message,
+                                   state: FSMContext):
+    await message.answer('Надеюсь, что когда эта задача попадется тебе снова, '
+                         + 'ты решишь ее')
+    await state.finish()
 
 
 @dp.message_handler(state=DoneTask.CHECK_ANSWER)
@@ -68,14 +75,6 @@ async def check_answer_random_task(message: types.Message,
             await state.finish()
         else:
             await message.answer('Неверно!\nПопробуй ещё раз')
-
-
-dp.message_handler(commands=['stop'], state=DoneTask.CHECK_ANSWER)
-async def check_answer_random_task(message: types.Message,
-                                   state: FSMContext):
-    await message.answer('Надеюсь, что когда эта задача попадется тебе снова, '
-                         + 'ты решишь ее')
-    await state.finish()
 
 
 while __name__ == '__main__':
