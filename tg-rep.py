@@ -12,7 +12,7 @@ from settings.config import TOKEN
 # from settingsForUpdates import SETTING
 
 
-# bot = Bot(SETTING['TOKEN'])
+bot = Bot(SETTING['TOKEN'])
 bot = Bot(TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
