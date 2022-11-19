@@ -61,6 +61,7 @@ class IntWithDb():
         s = file.readlines()
         reg = re.compile('\n')
         task = [tuple([reg.sub('', s[j]) for j in range(i * 4, i * 4 + 4)]) for i in range(len(s) // 4)]
+        print(task)
         return task
 
 
@@ -101,6 +102,7 @@ class IntWithDb():
             WHERE task_id = {random_task_id}
         """)
         random_task = cur.fetchone()
+        print(random_task)
         return random_task
 
 
