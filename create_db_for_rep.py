@@ -4,18 +4,19 @@ import os
 import re
 
 class IntWithDb():
-    def __init__(self) -> None:
+    def __init__(self, path: str = 'tasks\mat_demo_tasks.txt') -> None:
         if not os.path.isfile('db/tg-rep.db'):
-            self.create_db()
-            self.add_task(self.create_dict_for_add('tasks\demo_tasks.txt'))
+            self.create_db('m_tasks')
+            self.create_db('i_tasks')
+            self.add_task(self.create_dict_for_add(path))
 
 
-    def create_db(self) -> None:
+    def create_db(self, base: str) -> None:
         """Создание базы данных"""
         db = sl.connect("db/tg-rep.db")
         cur = db.cursor()
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS quests(
+        cur.execute(f"""
+            CREATE TABLE IF NOT EXISTS {base}(
                 task_id INT PRIMARY KEY,
                 task_desc TEXT,
                 task_answer TEXT,
@@ -25,32 +26,32 @@ class IntWithDb():
         db.commit()
 
 
-    def add_task(self, tasks: dict) -> None:
+    def add_task(self, tasks: dict, base: str) -> None:
         db = sl.connect("db/tg-rep.db")
         cur = db.cursor()
         for task in tasks:
-            cur.execute('''
-                INSERT INTO quests VALUES(?, ?, ?, ?);
+            cur.execute(f'''
+                INSERT INTO {base} VALUES(?, ?, ?, ?);
             ''', task)
             db.commit()
 
     
-    def get_task_id(self, id: int) -> str:
+    def get_task_id(self, id: int, base: str) -> str:
         db = sl.connect("db/tg-rep.db")
         cur = db.cursor()
         cur.execute(f"""
-            SELECT task_desc FROM quests
+            SELECT task_desc FROM {base}
             WHERE task_id = {id}
         """)
         answer = cur.fetchone()
         return answer[0]
 
 
-    def get_count_availaible_tasks(self) -> int:
+    def get_count_availaible_tasks(self, base: str) -> int:
         db = sl.connect('db/tg-rep.db')
         cur = db.cursor()
-        cur.execute("""
-            SELECT count(*) FROM quests
+        cur.execute(f"""
+            SELECT count(*) FROM {base}
         """)
         counts = cur.fetchone()[0]
         return counts
@@ -65,11 +66,11 @@ class IntWithDb():
         return task
 
 
-    def check_answer(self, id: int, answer: str, chat_id: str) -> bool:
+    def check_answer(self, id: int, answer: str, chat_id: str, base: str) -> bool:
         db = sl.connect('db/tg-rep.db')
         cur = db.cursor()
         cur.execute(f"""
-            SELECT task_answer FROM quests
+            SELECT task_answer FROM {base}
             WHERE task_id = {id}
         """)
         answer = answer.strip()
@@ -85,7 +86,7 @@ class IntWithDb():
         return False
 
 
-    def get_random_not_done_task(self, chat_id):
+    def get_random_not_done_task(self, chat_id: str, base: str):
         db = sl.connect('db/tg-rep.db')
         cur = db.cursor()
         cur.execute(f"""
@@ -98,7 +99,7 @@ class IntWithDb():
         shuffle(tasks)
         random_task_id = tasks[0][0]
         cur.execute(f"""
-            SELECT * FROM quests
+            SELECT * FROM {base}
             WHERE task_id = {random_task_id}
         """)
         random_task = cur.fetchone()
@@ -106,7 +107,7 @@ class IntWithDb():
         return random_task
 
 
-    def create_db_for_user(self, chat_id: str) -> None:
+    def create_db_for_user(self, chat_id: str, base: str) -> None:
         """Создает БД для пользователя с отметками о выполненных заданиях"""
         db = sl.connect('db/tg-rep.db')
         cur = db.cursor()
@@ -116,7 +117,7 @@ class IntWithDb():
             CREATE TABLE IF NOT EXISTS {chat_id}(
                 task_id INT,
                 done INT,
-                FOREIGN KEY (task_id) REFERENCES quests(task_id)
+                FOREIGN KEY (task_id) REFERENCES {base}(task_id)
             );
         """)
         db.commit()
@@ -126,8 +127,8 @@ class IntWithDb():
         count = cur.fetchone()[0]
         print(count)
         if count == 0:
-            cur.execute("""
-                SELECT * FROM quests
+            cur.execute(f"""
+                SELECT * FROM {base}
             """)
             tasks_id = cur.fetchall()
             print(tasks_id)
@@ -150,11 +151,11 @@ class IntWithDb():
 
 
 # db = IntWithDb()
-# db.add_task(db.create_dict_for_add('tasks\demo_tasks.txt'))
-# print(db.create_db_for_user('m1'))
-# task = db.get_random_not_done_task('m1')
+# db.add_task(db.create_dict_for_add('tasks\info_demo_task.txt'), 'i_tasks')
+# print(db.create_db_for_user('i1', 'i_tasks'))
+# task = db.get_random_not_done_task('i1', 'i_tasks')
 # print(task[1])
-# if db.check_answer(task[0], input(), 'm1'):
+# if db.check_answer(task[0], input(), 'i1', 'i_tasks'):
 #     print('Отлично')
 # else:
 #     print('Не очень(')

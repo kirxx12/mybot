@@ -1,0 +1,16 @@
+1
+Task on screenshot
+32
+tasks\images\info\1_7.png
+2
+Task on screenshot
+500
+tasks\images\info\1_8.png
+3
+Task on screenshot
+256
+tasks\images\info\2_7.png
+4
+Task on screenshot
+1458
+tasks\images\info\2_8.png
