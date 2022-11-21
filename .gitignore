@@ -3,3 +3,5 @@ venv
 
 settingsForUpdates.py
 .vscode
+
+tg_updates.py

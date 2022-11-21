@@ -141,7 +141,7 @@ class IntWithDb():
 
 
     def check_db(self, name: str) -> set:
-        db = sl.connect('tg-rep.db')
+        db = sl.connect('db/tg-rep.db')
         cur = db.cursor()
         cur.execute(f"""
             SELECT * FROM {name}
@@ -149,11 +149,21 @@ class IntWithDb():
         data = cur.fetchall()
         return data
 
+    
+    def delete_db(self, chat_id: str):
+        """Удаление таблицы ученика"""
+        db = sl.connect('db/tg-rep.db')
+        cur = db.cursor()
+        cur.execute(f"""
+            DROP TABLE IF EXISTS {chat_id}
+        """)
+        db.commit()
+
 
 # db = IntWithDb()
 # db.add_task(db.create_dict_for_add('tasks\info_demo_task.txt'), 'i_tasks')
 # print(db.create_db_for_user('i1', 'i_tasks'))
-# task = db.get_random_not_done_task('i1', 'i_tasks')
+# task = db.get_random_not_done_task('i4', 'i_tasks')
 # print(task[1])
 # if db.check_answer(task[0], input(), 'i1', 'i_tasks'):
 #     print('Отлично')

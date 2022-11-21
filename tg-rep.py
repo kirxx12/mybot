@@ -8,8 +8,10 @@ from aiogram.types import ParseMode
 from aiogram import executor
 from aiogram.types import KeyboardButton, ReplyKeyboardMarkup, \
     InlineKeyboardMarkup, ReplyKeyboardRemove, InlineKeyboardButton
+from aiogram.utils.exceptions import BadRequest
 from create_db_for_rep import IntWithDb
 from settings.config import TOKEN
+from sqlite3 import OperationalError
 # from settingsForUpdates import SETTING
 
 
@@ -53,6 +55,22 @@ async def stop_check_answer_random_task(message: types.Message,
     await state.finish()
 
 
+@dp.message_handler(commands=['stop'], state=GetAndCheckINFO.CHECK_ANSWER_INFO)
+async def stop_check_answer_random_task(message: types.Message,
+                                        state: FSMContext):
+    await message.answer('Надеюсь, что когда эта задача попадется тебе снова, '
+                         + 'ты решишь ее',
+                         reply_markup=ReplyKeyboardRemove())
+    await state.finish()
+
+
+@dp.message_handler(commands=['delete'])
+async def delete_table_for_user(message: types.Message):
+    data.delete_db('i' + str(message.chat.id))
+    data.delete_db('m' + str(message.chat.id))
+    await message.answer('Готово!')
+
+
 @dp.message_handler(commands=['help'])
 async def help_for_rep_bot(message: types.Message):
     await bot.send_message(message.chat.id,
@@ -77,35 +95,48 @@ async def start_with_math(message: types.Message):
 async def start_with_info(message: types.Message):
     data.create_db_for_user('i' + str(message.chat.id), 'i_tasks')
     btn = KeyboardButton('/geti')
-    mathstart_btns = ReplyKeyboardMarkup(resize_keyboard=True).add(btn)
+    infostart_btns = ReplyKeyboardMarkup(resize_keyboard=True).add(btn)
     await message.answer('Отлично, я создал для тебя базу и заполнил заданиями'
                          + '\nТеперь давай попробуем что-нибудь решить!'
                          + '\nВведи /geti, чтобы получить случайный номер по инфе',
-                         reply_markup=mathstart_btns)
+                         reply_markup=infostart_btns)
 
 
 @dp.message_handler(commands=['geti'])
 async def get_task_info(message: types.Message,
                         state: FSMContext):
     await GetAndCheckINFO.GET_TASK.set()
-    random_task = data.get_random_not_done_task('i' + str(message.chat.id),
-                                                'i_tasks')
-    if random_task[0] == '0':
-        task = 'Задания кончились, можно ложиться спать!'
-        await message.answer(task, reply_markup=ReplyKeyboardRemove())
+    
+    try:
+        random_task = data.get_random_not_done_task('i' + str(message.chat.id),
+                                                    'i_tasks')
+    except OperationalError:
+        btn = KeyboardButton('/create_info_base')
+        kb = ReplyKeyboardMarkup(resize_keyboard=True).add(btn)
         await state.finish()
+        await message.answer('Таблица не создана'
+                             + '\nСоздай базу',
+                             reply_markup=kb)
+    except:
+        await state.finish()
+        await message.answer('Что-то пошло не так:(')
     else:
-        photo = open(str(random_task[3]), 'rb')
-        async with state.proxy() as dt:
-            dt['id_task'] = random_task[0]
-        await GetAndCheckINFO.next()
-        btn = KeyboardButton('/stop')
-        geti_btns = ReplyKeyboardMarkup(resize_keyboard=True)
-        await bot.send_message(message.chat.id,
-                               f'{random_task[1]}'
-                               + '\nЧтобы прекратить выполнение, напиши /stop',
-                               reply_markup=geti_btns)
-        await bot.send_photo(message.chat.id, photo=photo)
+        if random_task[0] == '0':
+            task = 'Задания кончились, можно ложиться спать!'
+            await message.answer(task, reply_markup=ReplyKeyboardRemove())
+            await state.finish()
+        else:
+            photo = open(str(random_task[3]), 'rb')
+            async with state.proxy() as dt:
+                dt['id_task'] = random_task[0]
+            await GetAndCheckINFO.next()
+            btn = KeyboardButton('/stop')
+            geti_btns = ReplyKeyboardMarkup(resize_keyboard=True).add(btn)
+            await bot.send_message(message.chat.id,
+                                   f'{random_task[1]}'
+                                   + '\nЧтобы прекратить выполнение, напиши /stop',
+                                   reply_markup=geti_btns)
+            await bot.send_photo(message.chat.id, photo=photo)
 
 
 @dp.message_handler(state=GetAndCheckINFO.CHECK_ANSWER_INFO)
@@ -123,24 +154,36 @@ async def check_answer_info_random_task(message: types.Message,
 async def get_task_math(message: types.Message,
                              state: FSMContext):
     await GetAndCheckMATH.GET_TASK.set()
-    random_task = data.get_random_not_done_task('m'+ str(message.chat.id),
-                                                'm_tasks')
-    if random_task[0] == '0':
-        task = 'Задания кончились, можно ложиться спать!'
-        await message.answer(task, reply_markup=ReplyKeyboardRemove())
+    try:
+        random_task = data.get_random_not_done_task('m'+ str(message.chat.id),
+                                                    'm_tasks')
+    except OperationalError:
+        btn = KeyboardButton('/create_math_base')
+        kb = ReplyKeyboardMarkup(resize_keyboard=True).add(btn)
         await state.finish()
-    else:
-        photo = open(str(random_task[3]), 'rb')
-        async with state.proxy() as dt:
-            dt['id_task'] = random_task[0]
-        await GetAndCheckMATH.next()
-        btn = KeyboardButton('/stop')
-        getm_btns = ReplyKeyboardMarkup(resize_keyboard=True).add(btn)
-        await bot.send_message(message.chat.id,
-                               f'{random_task[1]}'
-                               + '\nЧтобы прекратить выполнение, напиши /stop',
-                               reply_markup=getm_btns)
-        await bot.send_photo(message.chat.id,
+        await message.answer('Таблица не создана'
+                             + '\nСоздай базу',
+                             reply_markup=kb)
+    except:
+        await state.finish()
+        await message.answer('Что-то пошло не так:(')
+    else:    
+        if random_task[0] == '0':
+            task = 'Задания кончились, можно ложиться спать!'
+            await message.answer(task, reply_markup=ReplyKeyboardRemove())
+            await state.finish()
+        else:
+            photo = open(str(random_task[3]), 'rb')
+            async with state.proxy() as dt:
+                dt['id_task'] = random_task[0]
+            await GetAndCheckMATH.next()
+            btn = KeyboardButton('/stop')
+            getm_btns = ReplyKeyboardMarkup(resize_keyboard=True).add(btn)
+            await bot.send_message(message.chat.id,
+                                   f'{random_task[1]}'
+                                   + '\nЧтобы прекратить выполнение, напиши /stop',
+                                   reply_markup=getm_btns)
+            await bot.send_photo(message.chat.id,
                              photo)
 
 
