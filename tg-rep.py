@@ -93,7 +93,7 @@ async def get_task_info(message: types.Message,
     if random_task[0] == '0':
         task = 'Задания кончились, можно ложиться спать!'
         await message.answer(task, reply_markup=ReplyKeyboardRemove())
-        await state.finish
+        await state.finish()
     else:
         photo = open(str(random_task[3]), 'rb')
         async with state.proxy() as dt:
