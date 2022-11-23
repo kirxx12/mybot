@@ -1,4 +1,5 @@
-__pycashe__
+__pycache__
+settings/__pycache__
 venv
 
 settingsForUpdates.py

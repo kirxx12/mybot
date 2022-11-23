@@ -1,16 +1,16 @@
 1
 Task on screenshot
 0.28
-tasks/images/math/3_14.jpg
+tasks\images\math\3_14.jpg
 2
 Task on screenshot
 0.014
-tasks/images/math/3_15.jpg
+tasks\images\math\3_15.jpg
 3
 Task on screenshot
 0.78
-tasks/images/math/4_14.jpg
+tasks\images\math\4_14.jpg
 4
 Task on screenshot
 0.06
-tasks/images/math/4_15.jpg
+tasks\images\math\4_15.jpg

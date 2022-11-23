@@ -4,11 +4,13 @@ import os
 import re
 
 class IntWithDb():
-    def __init__(self, path: str = 'tasks\mat_demo_tasks.txt') -> None:
+    def __init__(self, path: str = 'tasks\mat_demo_task.txt',
+                 path2: str = 'tasks\info_demo_task.txt') -> None:
         if not os.path.isfile('db/tg-rep.db'):
             self.create_db('m_tasks')
             self.create_db('i_tasks')
-            self.add_task(self.create_dict_for_add(path))
+            self.add_task(self.create_dict_for_add(path),  'm_tasks')
+            self.add_task(self.create_dict_for_add(path2), 'i_tasks')
 
 
     def create_db(self, base: str) -> None:
