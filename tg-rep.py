@@ -12,12 +12,12 @@ from aiogram.utils.exceptions import BadRequest
 from create_db_for_rep import IntWithDb
 from settings.config import TOKEN
 from sqlite3 import OperationalError
-from settings.settingsForUpdates import SETTING
+# from settings.settingsForUpdates import SETTING
 
 
 
-bot = Bot(SETTING['TOKEN'])
-# bot = Bot(TOKEN)
+# bot = Bot(SETTING['TOKEN'])
+bot = Bot(TOKEN)
 storage = MemoryStorage()
 dp = Dispatcher(bot, storage=storage)
 data = IntWithDb()
