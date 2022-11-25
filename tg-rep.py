@@ -60,6 +60,7 @@ async def stop_all_process(call: types.CallbackQuery,
     await call.message.answer(text='Надеюсь, что вскоре ты решишь эту задачу',
                               reply_markup=kb)
     await state.finish()
+    await call.message.delete()
 
 
 @dp.message_handler(commands=['delete'])
