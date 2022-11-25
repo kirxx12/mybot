@@ -53,7 +53,12 @@ async def start_with_rep_bot(message: types.Message):
                         ])
 async def stop_all_process(call: types.CallbackQuery,
                            state: FSMContext):
-    await call.message.answer(text='Надеюсь, что вскоре ты решишь эту задачу')
+    btns = [
+        InlineKeyboardButton(text='Вернуться', callback_data='menu')
+    ]
+    kb = InlineKeyboardMarkup(row_width=1).add(*btns)
+    await call.message.answer(text='Надеюсь, что вскоре ты решишь эту задачу',
+                              reply_markup=kb)
     await state.finish()
 
 
@@ -84,6 +89,7 @@ async def start_with_math(call: types.CallbackQuery):
                            text='Отлично, я создал для тебя базу и заполнил заданиями'
                            + '\nТеперь давай попробуем что-нибудь решить!',
                            reply_markup=kb)
+    await call.message.delete()
 
 
 @dp.callback_query_handler(text='create_info_base')
@@ -97,6 +103,7 @@ async def start_with_info(call: types.CallbackQuery):
                            text='Отлично, я создал для тебя базу и заполнил заданиями'
                            + '\nТеперь давай попробуем что-нибудь решить!',
                            reply_markup=kb)
+    await call.message.delete()
 
 
 @dp.callback_query_handler(text='geti')
@@ -116,14 +123,17 @@ async def get_task_info(call: types.CallbackQuery,
         await call.message.answer('Таблица не создана'
                                   + '\nСоздай базу',
                                   reply_markup=kb)
+        await call.message.delete()
     except:
         await state.finish()
         await call.message.answer('Что-то пошло не так:(')
+        await call.message.delete()
     else:
         if random_task[0] == '0':
             task = 'Задания кончились, можно ложиться спать!'
             await call.message.answer(text=task)
             await state.finish()
+            await call.message.delete()
         else:
             photo = open(str(random_task[3]), 'rb')
             async with state.proxy() as dt:
@@ -131,11 +141,11 @@ async def get_task_info(call: types.CallbackQuery,
             await GetAndCheckINFO.next()
             btn = InlineKeyboardButton(text='Стоп', callback_data='stop')
             geti_btns = InlineKeyboardMarkup(row_width=1).add(btn)
-            await bot.send_message(call.message.chat.id,
-                                   'Дробную часть от целой разделяй точкой!'
-                                   + '\nЧтобы прекратить выполнение, нажми кнопку ниже',
-                                   reply_markup=geti_btns)
-            await bot.send_photo(call.message.chat.id, photo=photo)
+            await bot.send_photo(call.message.chat.id, photo=photo,
+                                 caption='Дробную часть от целой разделяй точкой!'
+                                          + '\nЧтобы прекратить выполнение, нажми кнопку ниже',
+                                 reply_markup=geti_btns)
+            await call.message.delete()
 
 
 @dp.message_handler(state=GetAndCheckINFO.CHECK_ANSWER_INFO)
@@ -143,7 +153,11 @@ async def check_answer_info_random_task(message: types.Message,
                                         state: FSMContext):
     async with state.proxy() as dt:
         if data.check_answer(dt['id_task'], message.text, 'i' + str(message.chat.id), 'i_tasks'):
-            await message.answer('Все верно! Молодчинка:)', reply_markup=ReplyKeyboardRemove())
+            btns = [
+                InlineKeyboardButton(text='Вернуться в меню', callback_data='info_menu')
+            ]
+            kb = InlineKeyboardMarkup(row_width=1).add(*btns)
+            await message.answer('Все верно! Молодчинка:)', reply_markup=kb)
             await state.finish()
         else:
             await message.answer('Пока неверно, попробуй еще разок')
@@ -165,14 +179,17 @@ async def get_task_math(call: types.CallbackQuery,
         await call.message.answer('Таблица не создана'
                              + '\nСоздай базу',
                              reply_markup=kb)
+        await call.message.delete()
     except:
         await state.finish()
         await call.message.answer('Что-то пошло не так:(')
+        await call.message.delete()
     else:    
         if random_task[0] == '0':
             task = 'Задания кончились, можно ложиться спать!'
             await call.message.answer(task, reply_markup=ReplyKeyboardRemove())
             await state.finish()
+            await call.message.delete()
         else:
             photo = open(str(random_task[3]), 'rb')
             async with state.proxy() as dt:
@@ -181,12 +198,12 @@ async def get_task_math(call: types.CallbackQuery,
             btn = InlineKeyboardButton(text='Стоп',
                                        callback_data='stop')
             getm_btns = InlineKeyboardMarkup(row_width=1).add(btn)
-            await bot.send_message(call.message.chat.id,
-                                   'Дробную часть от целой отделяй точкой!'
-                                   + '\nЧтобы прекратить выполнение, напиши /stop',
-                                   reply_markup=getm_btns)
             await bot.send_photo(call.message.chat.id,
-                                 photo)
+                                 photo=photo,
+                                 caption='Дробную часть от целой отделяй точкой!'
+                                          + '\nЧтобы прекратить выполнение, напиши /stop',
+                                 reply_markup=getm_btns)
+            await call.message.delete()
 
 
 @dp.message_handler(state=GetAndCheckMATH.CHECK_ANSWER_MATH)
@@ -194,10 +211,47 @@ async def check_answer_math_random_task(message: types.Message,
                                    state: FSMContext):
     async with state.proxy() as dt:
         if data.check_answer(dt['id_task'], message.text, 'm' + str(message.chat.id), 'm_tasks'):
-            await message.answer('Все верно!:) Молодчинка', reply_markup=ReplyKeyboardRemove())
+            btns = [
+                InlineKeyboardButton(text='Вернуться в меню', callback_data='math_menu')
+            ]
+            kb = InlineKeyboardMarkup(row_width=1).add(*btns)
+            await message.answer('Все верно! Молодчинка:)', reply_markup=kb)
             await state.finish()
         else:
             await message.answer('Неверно!\nПопробуй ещё раз')
+
+
+@dp.callback_query_handler(text='menu')
+async def main_menu(call: types.CallbackQuery):
+    btns = [
+        InlineKeyboardButton(text='Математика', callback_data='math_menu'),
+        InlineKeyboardButton(text='Информатика', callback_data='info_menu')
+    ]
+    kb = InlineKeyboardMarkup(row_width=1).add(*btns)
+    await call.message.answer('Основное меню', reply_markup=kb)
+    await call.message.delete()
+
+
+@dp.callback_query_handler(text='math_menu')
+async def math_menu(call: types.CallbackQuery):
+    btns = [
+        InlineKeyboardButton(text='Случайное задание', callback_data='getm'),
+        InlineKeyboardButton(text='Вернуться', callback_data='menu')
+    ]
+    kb = InlineKeyboardMarkup(row_width=1).add(*btns)
+    await call.message.answer('Основное меню математики', reply_markup=kb)
+    await call.message.delete()
+
+
+@dp.callback_query_handler(text='info_menu')
+async def info_menu(call: types.CallbackQuery):
+    btns = [
+        InlineKeyboardButton(text='Случайное задание', callback_data='geti'),
+        InlineKeyboardButton(text='Вернуться', callback_data='menu')
+    ]
+    kb = InlineKeyboardMarkup(row_width=1).add(*btns)
+    await call.message.answer('Основное меню информатики', reply_markup=kb)
+    await call.message.delete()
 
 
 while __name__ == '__main__':
