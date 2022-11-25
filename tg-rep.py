@@ -142,8 +142,9 @@ async def get_task_info(call: types.CallbackQuery,
             btn = InlineKeyboardButton(text='Стоп', callback_data='stop')
             geti_btns = InlineKeyboardMarkup(row_width=1).add(btn)
             await bot.send_photo(call.message.chat.id, photo=photo,
-                                 caption='Дробную часть от целой разделяй точкой!',
-                                 reply_markup=geti_btns)
+                                 caption='Дробную часть от целой разделяй точкой!')
+            await call.message.answer(text='Чтобы прекратить выполнение - жми!',
+                                      reply_markup=geti_btns)
             await call.message.delete()
 
 
@@ -198,9 +199,9 @@ async def get_task_math(call: types.CallbackQuery,
                                        callback_data='stop')
             getm_btns = InlineKeyboardMarkup(row_width=1).add(btn)
             await bot.send_photo(call.message.chat.id,
-                                 photo=photo,
-                                 caption='Дробную часть от целой отделяй точкой!',
-                                 reply_markup=getm_btns)
+                                 photo=photo)
+            await call.message.answer(text='Чтобы прекратить выполнение - жми!',
+                                      reply_markup=getm_btns)
             await call.message.delete()
 
 
